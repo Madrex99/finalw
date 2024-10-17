@@ -9,26 +9,51 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (action === 'signup') {
         wrapper.classList.add('active')
-    }
-
-
-    registerLink.onclick = () => {
-        wrapper.classList.add('active')
-        history.pushState(null, null, '/register')
-    }
-
-    loginLink.onclick = () => {
+    } else if (action === 'signin') {
         wrapper.classList.remove('active')
-        history.pushState(null, null, '/login')
+    }
+
+
+    registerLink.onclick = (event) => {
+        event.preventDefault();
+        wrapper.classList.add('active')
+        // Update URL without reloading the page
+        history.pushState(null, '', '?action=signup')
+    }
+
+    loginLink.onclick = (event) => {
+        event.preventDefault();
+        wrapper.classList.remove('active')
+        // Update URL without reloading the page
+        history.pushState(null, '', '?action=signin')
     } 
 
+    // Handle browser back/forward buttons
     window.addEventListener('popstate', () => {
-        if (window.location.pathname === '/register') {
+        const newAction = new URLSearchParams(window.location.search).get('action');
+        if (newAction === 'signup') {
             wrapper.classList.add('active')
-            console.log('yes');
-        } else if (window.location.pathname === '/login') {
+        } else if (newAction === 'signin') {
             wrapper.classList.remove('active')
-            console.log('no');
         }
     })
 });
+
+/*
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const wrapper = document.querySelector('.wrapper')
+    const registerLink = document.querySelector('.register-link')
+    const loginLink = document.querySelector('.login-link')
+    // Check if the URL has the signup action 
+
+    registerLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        wrapper.classList.add('active')
+    })
+    loginLink.addEventListener('click', function(event) {
+        event.preventDefault();
+        wrapper.classList.remove('active')
+    })
+});
+*/
