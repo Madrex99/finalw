@@ -25,8 +25,9 @@
         <div class="form-box login">
             <h2 class="title animation" style="--i:0; --j:21">Login</h2>
 
-            <form action="{% url 'login' %}" method="post">
+            <form action="{% url 'auth' %}" method="post" id="loginForm">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="login">
                 <div class="input-box animation" style="--i:1; --j:22">
                     <input name="username" type="text" required>
                     <label for="">Username</label>
@@ -42,7 +43,7 @@
                 <button type="submit" class="btn animation" style="--i:3; --j:24">Login</button>
 
                 <div class="linkTxt animation" style="--i:5; --j:25">
-                    <p>Don't have an account? <a href="{% url 'login' %}?action=signup" class="register-link">Sign Up</a></p>
+                    <p>Don't have an account? <a href="{% url 'auth' %}?action=signup" class="register-link">Sign Up</a></p>
                 </div>
 
             </form>
@@ -63,8 +64,9 @@
 
             <h2 class="title animation" style="--i:17; --j:0">Sign Up</h2>
 
-            <form action="{% url 'register' %}" method="post">
+            <form action="{% url 'auth' %}" method="post" id="registerForm">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="register">
                 <div class="input-box animation" style="--i:18; --j:1">
                     <input name="register_username" type="text" required>
                     <label for="">Username</label>
@@ -86,7 +88,7 @@
                 <button type="submit" class="btn animation" style="--i:21;--j:4">Sign Up</button>
 
                 <div class="linkTxt animation" style="--i:22; --j:5">
-                    <p>Already have an account? <a href="{% url 'login' %}?action=login" class="login-link">Login</a></p>
+                    <p>Already have an account? <a href="{% url 'auth' %}?action=login" class="login-link">Login</a></p>
                 </div>
 
             </form>
