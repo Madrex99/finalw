@@ -24,10 +24,10 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="btn btn-outline-light me-2" href="{% url 'auth' %}?action=signup">Sign up</a>    
+                        <a class="btn btn-outline-light me-2" href="{% url 'register' %}">Sign up</a>    
                     </li>
                     <li class="nav-item">
-                        <a class="btn btn-primary" href="{% url 'auth' %}?action=login">Sign in</a>
+                        <a class="btn btn-primary" href="{% url 'login' %}">Sign in</a>
                     </li>
                 </ul>
             </div>
@@ -40,7 +40,7 @@
                 Unleash Your Musical Mood with Listify! <br>
                 <span class="subheading">Start Creating and Curating Your Perfect Playlists Today</span>
             </h1>
-            <a href="{% url 'auth' %}?action=signup" class="btn btn-custom">Get Started</a>
+            <a href="{% url 'register' %}" class="btn btn-custom">Get Started</a>
         </div>
     </main>
     

@@ -2,13 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
 from django.db import IntegrityError
+
+from .models import User
 # Create your views here.
 
 def home(request):
@@ -34,19 +35,24 @@ def logout_user(request):
     messages.success(request, 'You have been successfully logged out.')
     return redirect('home')
 
-def register_user(request):
+def register_view(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'You have been successfully registered.')
-            return render(request, 'playlist/index.html')
-        else:
-            messages.success(request, 'There was an error registering. Please try again.')
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+        try:
+            user = User.objects.create_user(username, email, password)
+            user.save()
+        except IntegrityError:
+            messages.success(request, ("There was an error registering, try again..."))
             return redirect('register')
+        login(request, user)
+        messages.success(request, ("Registration Successful!"))
+        return render(request, 'playlist/index.html')
     else:
-        return render(request, 'playlist/login.html')
-    
+        return render(request, 'playlist/register.html')
+
+""""
 def auth_view(request):
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -76,3 +82,4 @@ def auth_view(request):
     
     else:
         return render(request, 'playlist/login.html')
+"""
