@@ -29,6 +29,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Generate encryption key
 ENCRYPTION_KEY = Fernet.generate_key()
 
+# YouTube API credentials
+YOUTUBE_SECRET_FILE = os.path.join(BASE_DIR, 'spotify/youtube_secret.json')
+# YouTube API scope
+YOUTUBE_SCOPES = [
+    'https://www.googleapis.com/auth/youtube',
+]
+# YouTube API redirect URI
+YOUTUBE_REDIRECT_URI = env('YOUTUBE_REDIRECT_URI')
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 

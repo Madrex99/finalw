@@ -9,10 +9,12 @@ class User(AbstractUser):
 
 class SpotifyToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    access_token = models.CharField(max_length=255)
     refresh_token = models.CharField(max_length=255)
-    expires_in = models.DateTimeField()
-    token_type = models.CharField(max_length=50)
+    access_token = models.CharField(max_length=255)
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.user.username}'s Spotify Token"
 
     def encypt(token):
         fernet = Fernet(settings.ENCRYPTION_KEY)
@@ -33,3 +35,13 @@ class Playlist(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+class YoutubeToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.user.username}'s YouTube Token"
