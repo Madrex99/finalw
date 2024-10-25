@@ -1,61 +1,20 @@
+{% extends "playlist/layout.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listify</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!--Boxicons CDN-->
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <!--Custom CSS-->
+
+{% block extra_css %}
     <link rel="stylesheet" type="text/css" href="{% static 'playlist/home.css' %}">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">Listify</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="btn btn-outline-light me-2" href="{% url 'register' %}">Sign up</a>    
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-primary" href="{% url 'login' %}">Sign in</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% endblock %}
 
-    <main class="main-content">
-        <div class="container">
-            <h1 class="homepage-title">
-                Unleash Your Musical Mood with Listify! <br>
-                <span class="subheading">Start Creating and Curating Your Perfect Playlists Today</span>
-            </h1>
-            <a href="{% url 'register' %}" class="btn btn-custom">Get Started</a>
-        </div>
-    </main>
-    
+{% block body %}
+    <div class="container">
+        <h1 class="homepage-title">
+            Unleash Your Musical Mood with Listify! <br>
+            <span class="subheading">Start Creating and Curating Your Perfect Playlists Today</span>
+        </h1>
+        <a href="{% url 'register' %}" class="btn btn-custom">Get Started</a>
+    </div>
 
-    <!-- Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            setTimeout(() => {
-                document.querySelector('.main-content h1').classList.add('fade-in');
-                document.querySelector('.main-content .btn-custom').classList.add('fade-in');
-            }, 100);
-        });
-    </script>
-</body>
-</html>
+{% endblock %}
+{% block script %}
+    <script src="{% static 'playlist/home.js' %}"></script>
+{% endblock %}
