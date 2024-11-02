@@ -71,7 +71,10 @@ def signout_user(request):
     messages.success(request, 'You have been successfully logged out.')
     return redirect('home')
 
-
+#==========================================
+# Spotify
+#==========================================
+@login_required(login_url='login')
 def spotify_login(request):
     spotify_auth_url = 'https://accounts.spotify.com/authorize'
     spotify_client_id = settings.SPOTIFY_CLIENT_ID
@@ -104,32 +107,59 @@ def spotify_callback(request):
     }
 
     response = requests.post(token_url, headers=headers, data=data)
-    token_info = response.json()
-    access_token = token_info['access_token']
-    refresh_token = token_info['refresh_token']
-    token_expires_in = token_info['expires_in']
-
-    # Save access token in session
-    request.session['access_token'] = access_token
-    request.session['expires_at'] = datetime.now() + timedelta(seconds = token_expires_in)
-
-    # Save info to database
-    user = request.user
-    SpotifyToken.objects.update_or_create(
-        user=user,
-        defaults={
-            'refresh_token': refresh_token,
-        },
-    )
     
-    return redirect('index')
+    # Add error handling and debugging
+    if response.status_code != 200:
+        print("Error response from Spotify:", response.text)
+        messages.error(request, "Failed to authenticate with Spotify")
+        return redirect('index')
+
+    token_info = response.json()
+    
+    # Debug print
+    print("Spotify response:", token_info)
+    
+    try:
+        access_token = token_info['access_token']
+        refresh_token = token_info['refresh_token']
+        token_expires_in = token_info['expires_in']
+        token_expires_at = datetime.now() + timedelta(seconds=token_expires_in)
+
+        # Initialize the dictionaries if they don't exist
+        if 'access_token' not in request.session:
+            request.session['access_token'] = {}
+        if 'expires_at' not in request.session:
+            request.session['expires_at'] = {}
+
+        # Save access token in session
+        request.session['access_token']['spotify'] = access_token
+        request.session['expires_at']['spotify'] = token_expires_at.isoformat()
+        request.session.modified = True
+
+        # Save info to database
+        user = request.user
+        SpotifyToken.objects.update_or_create(
+            user=user,
+            defaults={
+                'refresh_token': refresh_token,
+            },
+        )
+        
+        messages.success(request, "Successfully connected to Spotify!")
+        return redirect('index')
+        
+    except KeyError as e:
+        print(f"KeyError: {str(e)} not found in response")
+        print("Full response:", token_info)
+        messages.error(request, "Invalid response from Spotify")
+        return redirect('index')
 
 
 @login_required(login_url='login')
 def spotify_refresh_token(request):
     # Check if access token is still valid
-    access_token = request.session.get('access_token')
-    expires_at = request.session.get('expires_at')
+    access_token = request.session.get('access_token')['spotify']
+    expires_at = request.session.get('expires_at')['spotify']
 
     if access_token and expires_at and now() < expires_at:
         return access_token
@@ -149,12 +179,15 @@ def spotify_refresh_token(request):
     # Update session with the new access token
     new_access_token = token_info['access_token']
     expires_in = token_info['expires_in']
-    request.session['access_token'] = new_access_token
-    request.session['expires_at'] = datetime.now() + timedelta(seconds=expires_in)
+    request.session['access_token']['spotify'] = new_access_token
+    request.session['expires_at']['spotify'] = datetime.now() + timedelta(seconds=expires_in)
 
     return new_access_token
 
-
+#==========================================
+# Youtube
+#==========================================
+@login_required(login_url='login')
 def youtube_login(request):
     CLIENT_SECRET_FILE = settings.YOUTUBE_SECRET_FILE
     SCOPES = settings.YOUTUBE_SCOPES
@@ -165,12 +198,16 @@ def youtube_login(request):
         redirect_uri=settings.YOUTUBE_REDIRECT_URI,
     )
 
-    authorization_url, state = flow.authorization_url()
+    flow.redirect_uri = settings.YOUTUBE_REDIRECT_URI
+    authorization_url, state = flow.authorization_url(
+        access_type='offline',
+        prompt='consent'
+    )
     request.session['state'] = state
 
     return redirect(authorization_url)
 
-
+@login_required(login_url='login')
 def youtube_callback(request):
     flow = Flow.from_client_secrets_file(
         settings.YOUTUBE_SECRET_FILE,
@@ -183,23 +220,61 @@ def youtube_callback(request):
     credentials = flow.credentials
     access_token = credentials.token
     refresh_token = credentials.refresh_token
-    expires_at = datetime.now() + timedelta(seconds=credentials.expiry)
+    if isinstance(credentials.expiry, (int, float)):
+        expires_at = datetime.now() + timedelta(seconds=credentials.expiry)
+    elif isinstance(credentials.expiry, datetime):
+        expires_at = credentials.expiry
+
+    # Initialize the dictionaries if they don't exist
+    if 'access_token' not in request.session:
+        request.session['access_token'] = {}
+    if 'expires_at' not in request.session:
+        request.session['expires_at'] = {}
 
     # save access token in session
-    request.session['access_token'] = access_token
-    request.session['expires_at'] = expires_at
+    request.session['access_token']['youtube'] = access_token
+    request.session['expires_at']['youtube'] = expires_at.timestamp()
 
     # Save refresh token in database
     user = request.user
-    YoutubeToken.objects.update_or_create(
-        user=user,
-        defaults={
-            'refresh_token': refresh_token,
-        }
-    )
+    print(f"refresh_token {refresh_token}")
+    print(f"expires_at {expires_at}")
+    print(f"access_token {access_token}")
+    if refresh_token:
+        YoutubeToken.objects.update_or_create(
+            user=user,
+            defaults={
+                'refresh_token': refresh_token,
+            }
+        )
 
     return redirect('index')
 
 
+@login_required(login_url='login')
 def youtube_refresh_token(request):
-    pass
+    user = request.user
+    access_token = request.session.get('access_token')['youtube']
+    expires_at = request.session.get('expires_at')['youtube']
+
+    user_tokens = YoutubeToken.objects.get(user=user)
+
+    if access_token and expires_at and now() < expires_at:
+        return access_token
+    
+    credentials = Credentials(
+        access_token,
+        refresh_token=user_tokens.refresh_token,
+        token_uri='https://oauth2.googleapis.com/token',
+        client_id=settings.YOUTUBE_CLIENT_ID,
+        client_secret=settings.YOUTUBE_CLIENT_SECRET,
+    )
+
+    # refresh the token if expired
+    if credentials.expired: 
+        credentials.refresh(Request())
+        # update access token in session
+        request.session['access_token']['youtube'] = credentials.token
+        request.session['expires_at']['youtube'] = str(datetime.now() + timedelta(seconds=credentials.expiry))
+
+    return credentials.token

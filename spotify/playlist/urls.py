@@ -8,8 +8,8 @@ urlpatterns = [
     path('login/', views.login_user, name='login'),
     path('register/', views.register_view, name='register'),
     path('signout/', views.signout_user, name='signout'),
-    path('spotify_login/', views.spotify_login, name='spotify_login'),
+    path('spotify/login/', views.spotify_login, name='spotify_login'),
     path('spotify/callback/', views.spotify_callback, name='spotify_callback'),
     path('youtube/callback/', views.youtube_callback, name='youtube_callback'),
-    path('youtube_login/', views.youtube_login, name='youtube_login'),
+    path('youtube/login/', views.youtube_login, name='youtube_login'),
 ]

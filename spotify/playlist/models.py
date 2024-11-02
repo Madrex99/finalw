@@ -10,8 +10,8 @@ class User(AbstractUser):
 class SpotifyToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     refresh_token = models.CharField(max_length=255)
-    access_token = models.CharField(max_length=255)
-    expires_at = models.DateTimeField()
+    access_token = models.CharField(max_length=255, null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s Spotify Token"
@@ -39,9 +39,9 @@ class Playlist(models.Model):
 
 class YoutubeToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    access_token = models.CharField(max_length=255)
+    access_token = models.CharField(max_length=255, null=True, blank=True)
     refresh_token = models.CharField(max_length=255)
-    expires_at = models.DateTimeField()
+    expires_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s YouTube Token"

@@ -2,7 +2,15 @@
 {% load static %}
 
 {% block body %}
-    <a href="{% url 'spotify_login' %}">Login with Spotify</a>
+    <form action="{% url 'spotify_login' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Login with Spotify</button>
+    </form>
+
+    <form action="{% url 'youtube_login' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Login with Youtube</button>
+    </form>
 {% endblock %}
 
 

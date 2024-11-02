@@ -23,6 +23,8 @@ SPOTIFY_CLIENT_ID = env('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = env('SPOTIFY_CLIENT_SECRET')
 SPOTIFY_REDIRECT_URI = env('SPOTIFY_REDIRECT_URI')
 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,7 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ENCRYPTION_KEY = Fernet.generate_key()
 
 # YouTube API credentials
-YOUTUBE_SECRET_FILE = os.path.join(BASE_DIR, 'spotify/youtube_secret.json')
+YOUTUBE_SECRET_FILE = os.path.join(BASE_DIR, 'client_secret.json')
 # YouTube API scope
 YOUTUBE_SCOPES = [
     'https://www.googleapis.com/auth/youtube',
@@ -47,7 +49,8 @@ SECRET_KEY = 'django-insecure-(^pj+pduw-7sgqs32n%^oc@6_zv3b=e!czt8_eby)vpk7qh%y)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['b6d3-196-75-85-200.ngrok-free.app', '127.0.0.1', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['https://b6d3-196-75-85-200.ngrok-free.app']
 
 
 # Application definition
