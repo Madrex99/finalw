@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+
+body {
+line-height: 1.6;
+background-color: black;
+}
+h1 {
+font-size: 36px;
+font-weight: bold;
+text-align: center;
+padding: 60px 0 60px 0;
+}
+
+form {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-bottom: 60px;
+}
+
+#search {
+width: 60%;
+background-color: #5F6368;
+max-width: 400px;
+padding: 10px 20px;
+border: none;
+box-shadow: 0 0 6px white;
+border-radius: 5px;
+font-size: 18px;
+color: white;
+}
+
+#playlist-search {
+padding: 10px 20px;
+background-color: #138065;
+color: #fff;
+border: none;
+font-size: 18px;
+box-shadow: 0 0 6px rgb(0,0,0,0.2);
+cursor: pointer;
+border-radius: 5px;
+margin-left: 10px;
+}
+
+#search::placeholder {
+color: white;
+}
+
+#search:focus {
+background-color: #303134;
+}
+
+#search:focus::placeholder {
+color: transparent;
+}
+
+.search-results {
+display: flex;
+flex-wrap: wrap;
+max-width: 1300px;
+margin: 0 auto;
+justify-content: space-between;
+}
+
+.search-result {
+display: flex;
+margin-bottom: 60px;
+gap: 2.5rem;
+justify-content: flex-start;
+flex-wrap:wrap;
+}
+
+.card-img-top {
+height: 200px;
+object-fit: cover;
+width: 100%;
+}

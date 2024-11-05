@@ -1,0 +1,75 @@
+{% extends "playlist/layout.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'playlist/playlist.css' %}">
+{% endblock %}
+
+{% block body %}
+
+<h1>Playlists</h1>
+<form>
+    <input type="text" id="search" placeholder="Name for playlist">
+    <button id="playlist-search">Search</button>
+</form>
+
+<div class="search-results">
+    <div class="search-result">
+        <div class="card bg-dark text-white" style="width: 18rem;">
+            <img src="https://images.unsplash.com/photo-1688387969153-39f12756809b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="https://unsplash.com/photos/a-person-holding-up-a-cell-phone-with-a-picture-of-a-person-on-it-lkyeII7A0Os" target="_blank" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+        <div class="card" style="width: 18rem;">
+            <img src="https://images.unsplash.com/photo-1688387969153-39f12756809b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="https://unsplash.com/photos/a-person-holding-up-a-cell-phone-with-a-picture-of-a-person-on-it-lkyeII7A0Os" target="_blank" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+
+        <div class="card" style="width: 18rem;">
+            <img src="https://images.unsplash.com/photo-1688387969153-39f12756809b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="https://unsplash.com/photos/a-person-holding-up-a-cell-phone-with-a-picture-of-a-person-on-it-lkyeII7A0Os" target="_blank" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+
+        <div class="card" style="width: 18rem;">
+            <img src="https://images.unsplash.com/photo-1688387969153-39f12756809b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="https://unsplash.com/photos/a-person-holding-up-a-cell-phone-with-a-picture-of-a-person-on-it-lkyeII7A0Os" target="_blank" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+
+        <div class="card" style="width: 18rem;">
+            <img src="https://images.unsplash.com/photo-1688387969153-39f12756809b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="https://unsplash.com/photos/a-person-holding-up-a-cell-phone-with-a-picture-of-a-person-on-it-lkyeII7A0Os" target="_blank" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+
+        <div class="card" style="width: 18rem;">
+            <img src="https://images.unsplash.com/photo-1688387969153-39f12756809b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="card-img-top" alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                <a href="https://unsplash.com/photos/a-person-holding-up-a-cell-phone-with-a-picture-of-a-person-on-it-lkyeII7A0Os" target="_blank" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+

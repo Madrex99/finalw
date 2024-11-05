@@ -25,6 +25,7 @@ def home(request):
 
 @login_required(login_url='login')
 def index(request):
+    sp(request)
     return render(request, 'playlist/index.html')
 
 def login_user(request):
@@ -158,10 +159,11 @@ def spotify_callback(request):
 @login_required(login_url='login')
 def spotify_refresh_token(request):
     # Check if access token is still valid
-    access_token = request.session.get('access_token')['spotify']
-    expires_at = request.session.get('expires_at')['spotify']
+    access_token = request.session.get('access_token', {}).get('spotify')
+    expires_at = request.session.get('expires_at', {}).get('spotify')
 
     if access_token and expires_at and now() < expires_at:
+        print(access_token)
         return access_token
     
     # If access token is expired
@@ -174,13 +176,28 @@ def spotify_refresh_token(request):
         'client_id': settings.SPOTIFY_CLIENT_ID,
         'client_secret': settings.SPOTIFY_CLIENT_SECRET,
     })
+    if response.status_code != 200:
+        # Log the error for debugging purposes
+        print(f"Error refreshing token: {response.json()}")
+        
+        # Redirect user to the login page to re-authenticate
+        return redirect('login')
+    
     token_info = response.json()
+
+    # Initialize the dictionaries if they don't exist
+    if 'access_token' not in request.session:
+        request.session['access_token'] = {}
+    if 'expires_at' not in request.session:
+        request.session['expires_at'] = {}
 
     # Update session with the new access token
     new_access_token = token_info['access_token']
     expires_in = token_info['expires_in']
+    expires_at = datetime.now() + timedelta(seconds=expires_in)
     request.session['access_token']['spotify'] = new_access_token
-    request.session['expires_at']['spotify'] = datetime.now() + timedelta(seconds=expires_in)
+    request.session['expires_at']['spotify'] = expires_at.isoformat()
+    print(new_access_token)
 
     return new_access_token
 
@@ -278,3 +295,23 @@ def youtube_refresh_token(request):
         request.session['expires_at']['youtube'] = str(datetime.now() + timedelta(seconds=credentials.expiry))
 
     return credentials.token
+
+#==========================================
+# playlists
+#==========================================
+"""def playlist(request):
+    access_token = spotify_refresh_token(request)
+    headers = {
+        'Authorization': f"Bearer {access_token}"
+    }
+
+    playlist_url = 'https://api.spotify.com/v1/me/playlists'
+    response = requests.get(playlist_url, headers=headers)
+
+    if response.status_code == 200:
+        playlists_data = response.json().get('items', [])
+"""
+
+def sp(request):
+    spotify_refresh_token(request)
+
