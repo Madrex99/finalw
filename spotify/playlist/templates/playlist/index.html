@@ -11,6 +11,8 @@
         {% csrf_token %}
         <button type="submit">Login with Youtube</button>
     </form>
+    <a href="{% url 'playlist' %}">spotify playlists</a>
+    <a href="{% url 'youtube_playlists' %}">youtube playlists</a>
    
     
 {% endblock %}

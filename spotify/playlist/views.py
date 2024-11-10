@@ -1,5 +1,6 @@
 import requests
 import base64
+import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
@@ -16,16 +17,23 @@ from django.utils.timezone import now, timezone
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
+from google.auth.exceptions import RefreshError
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+import json
 
 from .models import User, SpotifyToken, YoutubeToken
 # Create your views here.
+
+logger = logging.getLogger(__name__)
 
 def home(request):
     return render(request, 'playlist/home.html')
 
 @login_required(login_url='login')
 def index(request):
-    sp(request)
     return render(request, 'playlist/index.html')
 
 def login_user(request):
@@ -160,11 +168,14 @@ def spotify_callback(request):
 def spotify_refresh_token(request):
     # Check if access token is still valid
     access_token = request.session.get('access_token', {}).get('spotify')
-    expires_at = request.session.get('expires_at', {}).get('spotify')
+    expires_at_str = request.session.get('expires_at', {}).get('spotify')
 
-    if access_token and expires_at and now() < expires_at:
-        print(access_token)
-        return access_token
+    if access_token and expires_at_str:
+        expires_at = datetime.fromisoformat(expires_at_str).date()
+        date = datetime.now().date()
+        if date < expires_at:
+            print(access_token)
+            return access_token
     
     # If access token is expired
     refresh_token = SpotifyToken.objects.get(user=request.user).refresh_token
@@ -271,38 +282,74 @@ def youtube_callback(request):
 @login_required(login_url='login')
 def youtube_refresh_token(request):
     user = request.user
-    access_token = request.session.get('access_token')['youtube']
-    expires_at = request.session.get('expires_at')['youtube']
+    session = request.session
 
-    user_tokens = YoutubeToken.objects.get(user=user)
+    session.setdefault('access_token', {})
+    session.setdefault('expires_at', {})
 
-    if access_token and expires_at and now() < expires_at:
-        return access_token
-    
+    access_token = session['access_token'].get('youtube')
+    expires_at_str = session['expires_at'].get('youtube')
+
+    # Check if access token is still valid
+    if access_token and expires_at_str:
+        expires_at = datetime.fromisoformat(expires_at_str)
+        if datetime.now() < expires_at:
+            return access_token
+
+    # Get the user's refresh token from the database
+    try:
+        user_tokens = YoutubeToken.objects.get(user=user)
+        refresh_token = user_tokens.refresh_token
+    except YoutubeToken.DoesNotExist:
+        logger.error(f"No YouTube token found for user {user.id}")
+        messages.error(request, "YouTube authentication required. Please connect your YouTube account.")
+        return redirect('youtube_login')
+
+
+    # Load the client secrets file and initialize credentials
+    try:
+        with open(settings.YOUTUBE_SECRET_FILE, 'r') as f:
+            client_info = json.load(f)['web']
+    except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
+        logger.error(f"Error loading YouTube client secrets: {str(e)}")
+        messages.error(request, "An error occurred while accessing YouTube. Please try again later.")
+
     credentials = Credentials(
-        access_token,
-        refresh_token=user_tokens.refresh_token,
-        token_uri='https://oauth2.googleapis.com/token',
-        client_id=settings.YOUTUBE_CLIENT_ID,
-        client_secret=settings.YOUTUBE_CLIENT_SECRET,
+        None,
+        refresh_token=refresh_token,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=client_info["client_id"],
+        client_secret=client_info["client_secret"],
     )
 
-    # refresh the token if expired
-    if credentials.expired: 
+    try:
         credentials.refresh(Request())
-        # update access token in session
-        request.session['access_token']['youtube'] = credentials.token
-        request.session['expires_at']['youtube'] = str(datetime.now() + timedelta(seconds=credentials.expiry))
+    except RefreshError as e:
+        logger.error(f"Refresh token expired for user {user.id}: {str(e)}")
+        user_tokens.delete()
+        messages.warning(request, "Your YouTube connection has expired. Please reconnect your account.")
+        return redirect('youtube_login')
+    except Exception as e:
+        logger.error(f"Error refreshing YouTube token for user {user.id}: {str(e)}")
+        messages.error(request, "An error occurred while refreshing your YouTube connection. Please try again later.")
 
+    session['access_token']['youtube'] = credentials.token
+    session['expires_at']['youtube'] = credentials.expiry.isoformat()
+
+    if credentials.refresh_token != refresh_token:
+        user_tokens.refresh_token = credentials.refresh_token
+        user_tokens.save()
+        
     return credentials.token
+
 
 #==========================================
 # playlists
 #==========================================
-"""def playlist(request):
+def playlist(request):
     access_token = spotify_refresh_token(request)
     headers = {
-        'Authorization': f"Bearer {access_token}"
+        'Authorization': f'Bearer {access_token}'
     }
 
     playlist_url = 'https://api.spotify.com/v1/me/playlists'
@@ -310,8 +357,116 @@ def youtube_refresh_token(request):
 
     if response.status_code == 200:
         playlists_data = response.json().get('items', [])
-"""
+        
+        ## print the data
+        print("Playlists Data:", playlists_data)
+        return render(request, "playlist/playlist.html", {
+            "playlists": playlists_data
+        })
 
-def sp(request):
-    spotify_refresh_token(request)
 
+    else:
+        print(f"Failed to retrieve playlists: {response.status_code}")
+        return None
+    
+
+def youtube_playlist(request):
+    access_token = youtube_refresh_token(request)
+    headers={
+        "Authorization":f"Bearer {access_token}"
+    }
+
+    url = "https://www.googleapis.com/youtube/v3/playlists"
+    params={
+        "part":"snippet,contentDetails",
+        "mine": "true"
+    }
+
+    # Make the request
+    response = requests.get(url=url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        playlists_data = response.json().get('items', [])
+
+        print("Playlists Data:", playlists_data)
+        return render(request, "playlist/youtube.html", {
+            "playlists": playlists_data
+        })
+    else:
+        print(f"Failed to retrieve playlists: {response.status_code}")
+        return redirect('index')
+
+
+def transfer_spotify_playlist_to_youtube(request, spotify_playlist_id):
+    try:
+        # Get access tokens using existing functions
+        spotify_token = spotify_refresh_token(request)  # Assume this function exists
+        youtube_token = youtube_refresh_token(request)
+        
+        # Initialize Spotify and YouTube clients
+        sp = spotipy.Spotify(auth=spotify_token)
+        youtube = build('youtube', 'v3', credentials=Credentials(token=youtube_token))
+        
+        # Fetch Spotify playlist details
+        playlist = sp.playlist(spotify_playlist_id)
+        playlist_name = playlist['name']
+        tracks = playlist['tracks']['items']
+        
+        # Create YouTube playlist
+        youtube_playlist = youtube.playlists().insert(
+            part="snippet,status",
+            body={
+                "snippet": {
+                    "title": f"Spotify Import: {playlist_name}",
+                    "description": f"Imported from Spotify playlist: {playlist_name}"
+                },
+                "status": {"privacyStatus": "private"}
+            }
+        ).execute()
+        youtube_playlist_id = youtube_playlist['id']
+        logger.info(f"Created YouTube playlist: {youtube_playlist_id}")
+        
+        # Transfer tracks
+        for item in tracks:
+            track = item['track']
+            search_query = f"{track['name']} {' '.join([artist['name'] for artist in track['artists']])}"
+            
+            try:
+                search_response = youtube.search().list(
+                    q=search_query,
+                    type="video",
+                    part="id,snippet",
+                    maxResults=1
+                ).execute()
+                
+                if search_response['items']:
+                    video_id = search_response['items'][0]['id']['videoId']
+                    youtube.playlistItems().insert(
+                        part="snippet",
+                        body={
+                            "snippet": {
+                                "playlistId": youtube_playlist_id,
+                                "resourceId": {
+                                    "kind": "youtube#video",
+                                    "videoId": video_id
+                                }
+                            }
+                        }
+                    ).execute()
+                    logger.info(f"Added video {video_id} to YouTube playlist")
+                else:
+                    logger.warning(f"No video found for: {search_query}")
+            except HttpError as e:
+                logger.error(f"Error adding video to playlist: {str(e)}")
+        
+        logger.info(f"Playlist transfer completed. YouTube playlist ID: {youtube_playlist_id}")
+        return redirect('playlist')
+    
+    except spotipy.SpotifyException as e:
+        logger.error(f"Spotify API error: {str(e)}")
+    except HttpError as e:
+        logger.error(f"YouTube API error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+    
+    return None

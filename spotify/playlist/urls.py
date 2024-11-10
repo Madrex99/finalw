@@ -12,5 +12,7 @@ urlpatterns = [
     path('spotify/callback/', views.spotify_callback, name='spotify_callback'),
     path('youtube/callback/', views.youtube_callback, name='youtube_callback'),
     path('youtube/login/', views.youtube_login, name='youtube_login'),
-    #path('playlist/', views.playlist, name="playlist"),
+    path('playlist/', views.playlist, name="playlist"),
+    path('youtube_playlists', views.youtube_playlist, name="youtube_playlists"),
+    path('youtube/<str:spotify_playlist_id>', views.transfer_spotify_playlist_to_youtube, name="sp_to_yt")
 ]

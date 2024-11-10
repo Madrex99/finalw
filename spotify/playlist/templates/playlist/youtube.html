@@ -17,11 +17,11 @@
     <div class="search-result">
         {% for playlist in playlists %}
             <div class="card bg-dark text-white" style="width: 18rem;">
-                <img src="{{playlist.images.0.url}}" class="card-img-top" alt="{{playlist.description}}">
+                <img src="{{playlist.snippet.thumbnails.medium.url}}" class="card-img-top" alt="{{playlist.snippet.description}}">
                 <div class="card-body">
-                    <h5 class="card-title">{{playlist.name}}</h5>
-                    <p class="card-text">{{playlist.description}}</p>
-                    <a href="{% url 'sp_to_yt' spotify_playlist_id=playlist.id%}" target="_blank" class="btn btn-primary">spotify to youtube</a>
+                    <h5 class="card-title">{{playlist.snippet.title}}</h5>
+                    <p class="card-text">{{playlist.snippet.description}}</p>
+                    <a href="" target="_blank" class="btn btn-primary">Go somewhere</a>
                 </div>
             </div>
         {% endfor %}
