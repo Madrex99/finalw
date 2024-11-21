@@ -14,5 +14,8 @@ urlpatterns = [
     path('youtube/login/', views.youtube_login, name='youtube_login'),
     path('playlist/', views.playlist, name="playlist"),
     path('youtube_playlists', views.youtube_playlist, name="youtube_playlists"),
-    path('youtube/<str:spotify_playlist_id>', views.transfer_spotify_playlist_to_youtube, name="sp_to_yt")
+    path('youtube/<str:spotify_playlist_id>', views.transfer_spotify_playlist_to_youtube, name="sp_to_yt"),
+    path('spotify/<str:youtube_playlist_id>', views.transfer_youtube_playlist_to_spotify, name="yt_to_sp"),
+    path('search_playlists/', views.search_playlists, name='search_playlists'),
+    path('youtube_search/', views.youtube_search, name='youtube_search'),
 ]

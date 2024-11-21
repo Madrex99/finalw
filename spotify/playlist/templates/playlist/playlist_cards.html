@@ -1,0 +1,12 @@
+{% for playlist in playlists %}
+    <div class="card bg-dark text-white" style="width: 18rem;">
+        <img src="{{playlist.image_url}}" class="card-img-top" alt="{{playlist.description}}">
+        <div class="card-body">
+            <h5 class="card-title">{{playlist.name}}</h5>
+            <p class="card-text">{{playlist.description}}</p>
+            <a href="{% url 'sp_to_yt' spotify_playlist_id=playlist.id%}" class="btn btn-primary">spotify to youtube</a>
+        </div>
+    </div>
+{% empty %}
+    <div class="no-results">No playlists found matching your search.</div>
+{% endfor %}

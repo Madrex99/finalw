@@ -6,28 +6,28 @@
 {% endblock %}
 
 {% block body %}
-
 <h1>Playlists</h1>
-<form>
+<form id="search-form">
     <input type="text" id="search" placeholder="Name for playlist">
-    <button id="playlist-search">Search</button>
+    <button type="submit" id="playlist-search">Search</button>
 </form>
 
 <div class="search-results">
-    <div class="search-result">
+    <div class="search-result" id="playlist-container">
         {% for playlist in playlists %}
             <div class="card bg-dark text-white" style="width: 18rem;">
                 <img src="{{playlist.images.0.url}}" class="card-img-top" alt="{{playlist.description}}">
                 <div class="card-body">
                     <h5 class="card-title">{{playlist.name}}</h5>
                     <p class="card-text">{{playlist.description}}</p>
-                    <a href="{% url 'sp_to_yt' spotify_playlist_id=playlist.id%}" target="_blank" class="btn btn-primary">spotify to youtube</a>
+                    <a href="{% url 'sp_to_yt' spotify_playlist_id=playlist.id%}" class="btn btn-primary">spotify to youtube</a>
                 </div>
             </div>
         {% endfor %}
     </div>
 </div>
-
 {% endblock %}
 
-
+{% block script %}
+<script src="{% static 'playlist/search.js' %}"></script>
+{% endblock %}

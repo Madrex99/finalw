@@ -26,10 +26,12 @@ class SpotifyToken(models.Model):
         decrypted_token = fernet.decrypt(encrypted_token).decode()
         return decrypted_token
 
-class Playlist(models.Model):
+class Spotify_Playlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField()
+    spotify_playlist_id = models.CharField(max_length=255, unique=True, null=True)
+    image_url = models.URLField(default="/static/playlist/noimage.jpg")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -45,3 +47,16 @@ class YoutubeToken(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s YouTube Token"
+    
+
+class Youtube_Playlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    youtube_playlist_id = models.CharField(max_length=255, unique=True, null=True)
+    image_url = models.URLField(default="/static/playlist/noimage.jpg")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name

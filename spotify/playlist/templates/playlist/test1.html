@@ -1,0 +1,305 @@
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to bottom right, #1a202c, #2d3748);
+        color: white;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    header {
+        background-color: #2d3748;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        font-size: 2rem;
+        margin: 0;
+    }
+    main {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2rem 0;
+    }
+    @media (min-width: 768px) {
+        main {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    .section {
+        background-color: #4a5568;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+        font-size: 1.5rem;
+        margin-top: 0;
+    }
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 1rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: bold;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.3s;
+    }
+    .btn:hover {
+        transform: scale(1.05);
+    }
+    .btn-spotify {
+        background-color: #1db954;
+        color: white;
+    }
+    .btn-spotify:hover {
+        background-color: #1ed760;
+    }
+    .btn-youtube {
+        background-color: #ff0000;
+        color: white;
+    }
+    .btn-youtube:hover {
+        background-color: #ff3333;
+    }
+    .playlist-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .playlist-item {
+        background-color: #2d3748;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .playlist-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    }
+    .playlist-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    footer {
+        background-color: #2d3748;
+        text-align: center;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+    }
+    .loading:after {
+        content: '.';
+        animation: dots 1s steps(5, end) infinite;
+    }
+    @keyframes dots {
+        0%, 20% {
+            color: rgba(0,0,0,0);
+            text-shadow:
+                .25em 0 0 rgba(0,0,0,0),
+                .5em 0 0 rgba(0,0,0,0);
+        }
+        40% {
+            color: white;
+            text-shadow:
+                .25em 0 0 rgba(0,0,0,0),
+                .5em 0 0 rgba(0,0,0,0);
+        }
+        60% {
+            text-shadow:
+                .25em 0 0 white,
+                .5em 0 0 rgba(0,0,0,0);
+        }
+        80%, 100% {
+            text-shadow:
+                .25em 0 0 white,
+                .5em 0 0 white;
+        }
+    }
+    #playlist-content {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+    #playlist-content.visible {
+        opacity: 1;
+    }
+    .search-results {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    .card {
+        background-color: #2d3748;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+    }
+    .card-img-top {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    .card-body {
+        padding: 1rem;
+    }
+    .card-title {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .card-text {
+        font-size: 0.875rem;
+        color: #a0aec0;
+    }
+    .btn-transfer {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        background-color: #4a5568;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+    .btn-transfer:hover {
+        background-color: #718096;
+    }
+</style>
+
+<div class="container">
+    <header>
+        <h1>Playlist Transfer</h1>
+    </header>
+    <main>
+        <div class="section">
+            <h2>Connect Your Accounts</h2>
+            <form action="{% url 'spotify_login' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-spotify">Login with Spotify</button>
+            </form>
+            <form action="{% url 'youtube_login' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-youtube">Login with Youtube</button>
+            </form>
+        </div>
+        <div class="section">
+            <h2>Your Playlists</h2>
+            <div class="playlist-grid">
+                <button class="btn btn-spotify" id="spotify-btn">
+                    <div class="playlist-icon">🎵</div>
+                    <h3>Spotify Playlists</h3>
+                </button>
+                <button class="btn btn-youtube" id="youtube-btn">
+                    <div class="playlist-icon">▶️</div>
+                    <h3>YouTube Playlists</h3>
+                </button>
+            </div>
+        </div>
+    </main>
+    <div id="playlist-content" class="section" style="display: none;">
+        <div class="loading">Loading playlists</div>
+        <div id="playlist-results"></div>
+    </div>
+    <footer>
+        <p>&copy; 2023 Playlist Transfer. All rights reserved.</p>
+    </footer>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const spotifyBtn = document.getElementById('spotify-btn');
+    const youtubeBtn = document.getElementById('youtube-btn');
+    const playlistContent = document.getElementById('playlist-content');
+    const playlistResults = document.getElementById('playlist-results');
+    const loadingIndicator = document.querySelector('.loading');
+
+    function loadContent(url) {
+        playlistContent.style.display = 'block';
+        playlistContent.classList.remove('visible');
+        loadingIndicator.style.display = 'block';
+        playlistResults.innerHTML = '';
+
+        fetch(url)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const content = doc.querySelector('.search-results').innerHTML;
+                playlistResults.innerHTML = content;
+                loadingIndicator.style.display = 'none';
+                setTimeout(() => {
+                    playlistContent.classList.add('visible');
+                }, 50);
+                history.pushState(null, '', url);
+                addTransferListeners();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                playlistResults.innerHTML = '<p>Error loading playlists. Please try again.</p>';
+                loadingIndicator.style.display = 'none';
+                playlistContent.classList.add('visible');
+            });
+    }
+
+    function addTransferListeners() {
+        const transferButtons = document.querySelectorAll('.btn-transfer');
+        transferButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.href;
+                fetch(url)
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Transfer successful!');
+                            // Reload the current playlist view
+                            loadContent(window.location.href);
+                        } else {
+                            throw new Error('Transfer failed');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error transferring playlist. Please try again.');
+                    });
+            });
+        });
+    }
+
+    spotifyBtn.addEventListener('click', function() {
+        loadContent("{% url 'playlist' %}");
+        this.classList.add('btn-spotify-active');
+        youtubeBtn.classList.remove('btn-youtube-active');
+    });
+
+    youtubeBtn.addEventListener('click', function() {
+        loadContent("{% url 'youtube_playlists' %}");
+        this.classList.add('btn-youtube-active');
+        spotifyBtn.classList.remove('btn-spotify-active');
+    });
+
+    window.addEventListener('popstate', function() {
+        location.reload();
+    });
+});
+</script>

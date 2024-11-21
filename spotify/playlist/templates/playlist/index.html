@@ -1,20 +1,55 @@
 {% extends "playlist/layout.html" %}
 {% load static %}
 
-{% block body %}
-    <form action="{% url 'spotify_login' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Login with Spotify</button>
-    </form>
-
-    <form action="{% url 'youtube_login' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Login with Youtube</button>
-    </form>
-    <a href="{% url 'playlist' %}">spotify playlists</a>
-    <a href="{% url 'youtube_playlists' %}">youtube playlists</a>
-   
+{% block extra_css %}
+    <link rel="stylesheet" type="text/css" href="{% static 'playlist/index.css' %}">
+{% endblock %}
     
+{% block body %}
+<div class="container">
+    <header>
+        <h1>Playlist Transfer</h1>
+    </header>
+    <main>
+        <div class="section">
+            <h2>Connect Your Accounts</h2>
+            <form action="{% url 'spotify_login' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-spotify">Login with Spotify</button>
+            </form>
+            <form action="{% url 'youtube_login' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-youtube">Login with Youtube</button>
+            </form>
+        </div>
+        <div class="section">
+            <h2>Your Playlists</h2>
+            <div class="playlist-grid">
+                <button class="btn btn-spotify" id="spotify-btn">
+                    <a href="{% url 'playlist' %}">
+                    <div class="playlist-icon">🎵</div>
+                    <h3>Spotify Playlists</h3>
+                </button>
+                <button class="btn btn-youtube" id="youtube-btn">
+                    <a href="{% url 'youtube_playlists' %}">
+                    <div class="playlist-icon">▶️</div>
+                    <h3>YouTube Playlists</h3>
+                </button>
+            </div>
+        </div>
+    </main>
+    <div id="playlist-content" class="section" style="display: none;">
+        <div class="loading">Loading playlists</div>
+        <div id="playlist-results"></div>
+    </div>
+    <footer>
+        <p>&copy; 2023 Playlist Transfer. All rights reserved.</p>
+    </footer>
+</div>
+
+
 {% endblock %}
 
+{% block extra_js %}
 
+{% endblock %}
