@@ -64,6 +64,7 @@ Configuration:
    - Create credentials (OAuth 2.0 Client ID) for a web application
    - Download the client secret JSON file and place it in the project root
    - Set the authorized redirect URIs in your Google Console project settings
+   - Add your email to the test users
 
 Usage:
 ------
