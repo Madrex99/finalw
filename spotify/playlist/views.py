@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -121,14 +121,11 @@ def spotify_callback(request):
     
     # Add error handling and debugging
     if response.status_code != 200:
-        print("Error response from Spotify:", response.text)
         messages.error(request, "Failed to authenticate with Spotify")
         return redirect('index')
 
     token_info = response.json()
     
-    # Debug print
-    print("Spotify response:", token_info)
     
     try:
         access_token = token_info['access_token']
@@ -162,8 +159,6 @@ def spotify_callback(request):
         return redirect('index')
         
     except KeyError as e:
-        print(f"KeyError: {str(e)} not found in response")
-        print("Full response:", token_info)
         messages.error(request, "Invalid response from Spotify")
         return redirect('index')
 
@@ -178,7 +173,6 @@ def spotify_refresh_token(request):
         expires_at = datetime.fromisoformat(expires_at_str).date()
         date = datetime.now().date()
         if date < expires_at:
-            print(access_token)
             return access_token
     
     # If access token is expired
@@ -193,7 +187,6 @@ def spotify_refresh_token(request):
     })
     if response.status_code != 200:
         # Log the error for debugging purposes
-        print(f"Error refreshing token: {response.json()}")
         
         # Redirect user to the login page to re-authenticate
         return redirect('login')
@@ -214,7 +207,6 @@ def spotify_refresh_token(request):
         'access_token': access_token,
         'expires_at': expires_at.timestamp(),
     }
-    print(new_access_token)
 
     return new_access_token
 
@@ -251,39 +243,43 @@ def youtube_callback(request):
     )
     flow.fetch_token(authorization_response=request.build_absolute_uri())
 
-    credentials = flow.credentials
-    access_token = credentials.token
-    refresh_token = credentials.refresh_token
-    if isinstance(credentials.expiry, (int, float)):
-        expires_at = datetime.now() + timedelta(seconds=credentials.expiry)
-    elif isinstance(credentials.expiry, datetime):
-        expires_at = credentials.expiry
+    try:
+        credentials = flow.credentials
+        access_token = credentials.token
+        refresh_token = credentials.refresh_token
+        if isinstance(credentials.expiry, (int, float)):
+            expires_at = datetime.now() + timedelta(seconds=credentials.expiry)
+        elif isinstance(credentials.expiry, datetime):
+            expires_at = credentials.expiry
 
-    # Initialize the dictionaries if they don't exist
-    if 'access_token' not in request.session:
-        request.session['access_token'] = {}
-    if 'expires_at' not in request.session:
-        request.session['expires_at'] = {}
+        # Initialize the dictionaries if they don't exist
+        if 'access_token' not in request.session:
+            request.session['access_token'] = {}
+        if 'expires_at' not in request.session:
+            request.session['expires_at'] = {}
 
-    # save access token in session
-    request.session['youtube'] = {
-        'access_token': access_token,
-        'expires_at': expires_at.timestamp(),
-    }
-    # Save refresh token in database
-    user = request.user
-    print(f"refresh_token {refresh_token}")
-    print(f"expires_at {expires_at}")
-    print(f"access_token {access_token}")
-    if refresh_token:
-        YoutubeToken.objects.update_or_create(
-            user=user,
-            defaults={
-                'refresh_token': refresh_token,
-            }
-        )
+        # save access token in session
+        request.session['youtube'] = {
+            'access_token': access_token,
+            'expires_at': expires_at.timestamp(),
+        }
+        # Save refresh token in database
+        user = request.user
+        
+        if refresh_token:
+            YoutubeToken.objects.update_or_create(
+                user=user,
+                defaults={
+                    'refresh_token': refresh_token,
+                }
+            )
+        messages.success(request, "Successfully connected to Youtube!")
+        return redirect('index')
+        
+    except KeyError as e:
+        messages.error(request, "Invalid response from Youtube")
+        return redirect('index')
 
-    return redirect('index')
 
 
 @login_required(login_url='login')
@@ -298,10 +294,15 @@ def youtube_refresh_token(request):
     expires_at_str = request.session.get('youtube', {}).get('expires_at')
 
     # Check if access token is still valid
-    if access_token and expires_at_str:
-        expires_at = datetime.fromisoformat(expires_at_str)
-        if datetime.now() < expires_at:
-            return access_token
+    if isinstance(expires_at_str, str):
+        try:
+            expires_at = datetime.fromisoformat(expires_at_str)
+            if datetime.now() < expires_at:
+                return access_token
+        except ValueError:
+            pass  # Invalid format, proceed to refresh the token
+    else:
+        expires_at = None
 
     # Get the user's refresh token from the database
     try:
@@ -340,15 +341,23 @@ def youtube_refresh_token(request):
         logger.error(f"Error refreshing YouTube token for user {user.id}: {str(e)}")
         messages.error(request, "An error occurred while refreshing your YouTube connection. Please try again later.")
 
+    # Update session and database
+    if isinstance(credentials.expiry, datetime):
+        expires_at = credentials.expiry
+    elif credentials.expiry:
+        expires_at = datetime.now() + timedelta(seconds=credentials.expiry)
+    else:
+        expires_at = datetime.now() + timedelta(hours=1)  # Default expiry
+
     request.session['youtube'] = {
-        'access_token': access_token,
-        'expires_at': expires_at.timestamp(),
+        'access_token': credentials.token,
+        'expires_at': expires_at.isoformat(),
     }
 
-    if credentials.refresh_token != refresh_token:
+    if credentials.refresh_token and credentials.refresh_token != refresh_token:
         user_tokens.refresh_token = credentials.refresh_token
         user_tokens.save()
-        
+
     return credentials.token
 
 
@@ -370,14 +379,12 @@ def playlist(request):
 
         
         ## print the data
-        print("Playlists Data:", playlists_data)
         return render(request, "playlist/playlist.html", {
             "playlists": playlists_data
         })
 
 
     else:
-        print(f"Failed to retrieve playlists: {response.status_code}")
         return None
     
 
@@ -399,12 +406,10 @@ def youtube_playlist(request):
     if response.status_code == 200:
         playlists_data = response.json().get('items', [])
 
-        print("Playlists Data:", playlists_data)
         return render(request, "playlist/youtube.html", {
             "playlists": playlists_data
         })
     else:
-        print(f"Failed to retrieve playlists: {response.status_code}")
         return redirect('index')
 
 
@@ -603,23 +608,83 @@ def transfer_youtube_playlist_to_spotify(request, youtube_playlist_id):
     return redirect("index")
 
 
+
+@login_required
 def search_playlists(request):
     query = request.GET.get('query', '')
-    playlists = Spotify_Playlist.objects.filter(name__icontains=query)
-    html = render_to_string('playlist/playlist_cards.html', {'playlists': playlists})
-    return HttpResponse(html)
+    access_token = spotify_refresh_token(request)
+    
+    try:
+        headers = {'Authorization': f'Bearer {access_token}'}
+        response = requests.get(
+            'https://api.spotify.com/v1/me/playlists',
+            headers=headers,
+            params={'limit': 50}
+        )
+        response.raise_for_status()
+        
+        playlists_data = response.json()['items']
+        
+        # Filter playlists based on search query
+        filtered_playlists = [
+            playlist for playlist in playlists_data
+            if query.lower() in playlist['name'].lower()
+        ]
+        
+        html = render_to_string('playlist/playlist_cards.html', {
+            'playlists': filtered_playlists
+        })
+        
+        return JsonResponse({
+            'status': 'success',
+            'html': html
+        })
+        
+    except Exception as e:
+        logger.error(f"Error searching Spotify playlists: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Failed to search playlists'
+        }, status=500)
 
-def playlist_view(request):
-    playlists = Spotify_Playlist.objects.all()
-    return render(request, 'playlist/playlist.html', {'playlists': playlists})
-
-
+@login_required
 def youtube_search(request):
     query = request.GET.get('query', '')
-    playlists = Youtube_Playlist.objects.filter(name__icontains=query)
-    html = render_to_string('playlist/youtube_card.html', {'playlists': playlists})
-    return HttpResponse(html)
-
-def playlist_view(request):
-    playlists = Youtube_Playlist.objects.all()
-    return render(request, 'playlist/youtube.html', {'playlists': playlists})
+    access_token = youtube_refresh_token(request)
+    
+    try:
+        headers = {'Authorization': f'Bearer {access_token}'}
+        response = requests.get(
+            'https://www.googleapis.com/youtube/v3/playlists',
+            headers=headers,
+            params={
+                'part': 'snippet,contentDetails',
+                'mine': 'true',
+                'maxResults': 50
+            }
+        )
+        response.raise_for_status()
+        
+        playlists_data = response.json()['items']
+        
+        # Filter playlists based on search query
+        filtered_playlists = [
+            playlist for playlist in playlists_data
+            if query.lower() in playlist['snippet']['title'].lower()
+        ]
+        
+        html = render_to_string('playlist/youtube_card.html', {
+            'playlists': filtered_playlists
+        })
+        
+        return JsonResponse({
+            'status': 'success',
+            'html': html
+        })
+        
+    except Exception as e:
+        logger.error(f"Error searching YouTube playlists: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Failed to search playlists'
+        }, status=500)
